@@ -1,19 +1,28 @@
 package de.jvw.fourwins;
 
-public class FourWins implements FourWinsLogic {
+public class MiniGame implements FourWinsLogic, TicTacToeLogic {
 
-	private final static int COLUMNS = 7;
-	private final static int ROWS = 6;
-
-	private Chip[][] field = new Chip[COLUMNS][ROWS];
-
+	private Chip[][] field;
+	private GameType gameType;
+	
+	public MiniGame() {
+		this.gameType = GameType.FOURWINS;
+		field = new Chip[gameType.getCol()][gameType.getRows()];
+	}
+	
+	public MiniGame(GameType gameType) {
+		this.gameType = gameType;
+		field = new Chip[gameType.getCol()][gameType.getRows()];
+	}
+	
 	@Override
 	public Result throwChip(Chip chip, int column) {
-		if (column >= COLUMNS || column < 0)
+		System.out.println(this.gameType.getCol());
+		if (column >= this.gameType.getCol() || column < 0)
 			return Result.INVALID;
 		int row = 0;
 		while (field[column][row] != null) {
-			if (++row >= ROWS) {
+			if (++row >= this.gameType.getRows()) {
 				return Result.INVALID;
 			}
 		}
@@ -33,12 +42,34 @@ public class FourWins implements FourWinsLogic {
 
 		return result;
 	}
+	
+	@Override
+	public Result setChip(Chip chip, int row, int col) {
+		if(row >= gameType.getRows() || col >= gameType.getRows() || field[col][row] != null)
+			return Result.INVALID;
+		
+		
+		field[col][row] = chip;
+		Result result = Result.UNDECIDED;
+		
+		result = checkFourInColumn(chip, col, row);
+
+		if (result != Result.WON) {
+			result = checkFourInRow(chip, col, row);
+		}
+
+		if (result != Result.WON) {
+			result = checkFourInDiagonal(chip, col, row);
+		}
+
+		return result;
+	}
 
 	private Result checkFourInRow(Chip chip, int column, int row) {
 		int foundChipsInRow = 0;
-		for (int i = 0; i < COLUMNS; i++) {
+		for (int i = 0; i < this.gameType.getCol(); i++) {
 			if (field[i][row] == chip) {
-				if (++foundChipsInRow >= 4) {
+				if (++foundChipsInRow >= this.gameType.getWon()) {
 					return Result.WON;
 				}
 			} else {
@@ -49,13 +80,15 @@ public class FourWins implements FourWinsLogic {
 	}
 
 	private Result checkFourInColumn(Chip chip, int column, int row) {
-		if (row - 3 >= 0) {
-			for (int i = 1; i < 4; i++) {
-				if (field[column][row - i] != chip) {
-					return Result.UNDECIDED;
+		int foundChipsInRow = 0;
+		for (int i = 0; i < this.gameType.getRows(); i++) {
+			if (field[column][i] == chip) {
+				if (++foundChipsInRow >= this.gameType.getWon()) {
+					return Result.WON;
 				}
+			} else {
+				foundChipsInRow = 0;
 			}
-			return Result.WON;
 		}
 		return Result.UNDECIDED;
 	}
@@ -78,9 +111,9 @@ public class FourWins implements FourWinsLogic {
 			columnCheck--;
 		}
 		int foundChipsInDiagonal = 0;
-		while (rowCheck < ROWS && columnCheck < COLUMNS) {
+		while (rowCheck < this.gameType.getRows() && columnCheck < this.gameType.getCol()) {
 			if (field[columnCheck][rowCheck] == chip) {
-				if (++foundChipsInDiagonal >= 4) {
+				if (++foundChipsInDiagonal >= this.gameType.getWon()) {
 					return Result.WON;
 				}
 			} else {
@@ -93,14 +126,14 @@ public class FourWins implements FourWinsLogic {
 	}
 	
 	private Result checkFourInDiagonalRight(Chip chip, int columnCheck, int rowCheck) {
-		while (rowCheck < ROWS-1 && columnCheck > 0) {
+		while (rowCheck < this.gameType.getRows() -1 && columnCheck > 0) {
 			rowCheck++;
 			columnCheck--;
 		}
 		int foundChipsInDiagonal = 0;
-		while (rowCheck >= 0 && columnCheck < COLUMNS) {
+		while (rowCheck >= 0 && columnCheck < this.gameType.getCol()) {
 			if (field[columnCheck][rowCheck] == chip) {
-				if (++foundChipsInDiagonal >= 4) {
+				if (++foundChipsInDiagonal >= this.gameType.getWon()) {
 					return Result.WON;
 				}
 			} else {
@@ -111,4 +144,5 @@ public class FourWins implements FourWinsLogic {
 		}
 		return Result.UNDECIDED;
 	}
+
 }
